@@ -7,7 +7,7 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = "random_key"
 socketio = SocketIO(app)
 
-@app.route("/", methods = ["POST", "GET"])
+@app.route("/", methods=["POST", "GET"])
 def home():
     return render_template("home.html")
 
