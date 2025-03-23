@@ -8,6 +8,7 @@
       placeholder="Pick a name!"
       name="name"
       value="{{name}}"
+      readonly
     />
   </div>
   <div class="join">
@@ -15,6 +16,11 @@
     <button type="submit" name="join">Join a Room</button>
   </div>
   <button type="submit" name="create" class="create-btn">Create a Room</button>
+  
+  <div class="direct-chat-link">
+    <a href="{{ url_for('users') }}" class="create-btn">Chat with a User</a>
+  </div>
+  
   {% if error %}
   <ul>
     <li>{{error}}</li>

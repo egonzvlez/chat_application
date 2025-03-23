@@ -1,68 +1,381 @@
+body {
+  font-family: 'Arial', sans-serif;
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+  background-color: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.header {
+  background-color: #2c3e50;
+  color: white;
+  padding: 1rem;
+  text-align: center;
+}
+
 .content {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .buttons {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-  }
-  
-  .join {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-  }
-  
-  .create-btn {
-    width: 100%;
-  }
-  .message-box {
-    border-color: black;
-    border-width: 2px;
-    border-style: solid;
-    border-radius: 10px;
-    background-color: whitesmoke;
-    height: 80vh;
-    display: flex;
-    flex-direction: column;
-    width: 80vw;
-    align-items: stretch;
-  }
-  
-  .messages {
-    overflow-y: scroll;
-    flex: 1;
-    width: 100%;
-  }
-  
-  .inputs {
-    padding: 10px;
-    display: flex;
-  }
-  
-  h2 {
-    text-align: center;
-  }
-  
-  #message {
-    flex: 1;
-  }
-  
-  .text {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    padding-left: 10px;
-    padding-right: 10px;
-  }
-  
-  .muted {
-    font-size: 10px;
-    color: darkgray;
-  }
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+/* Navigation links */
+.nav-links {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.nav-links a {
+  color: white;
+  text-decoration: none;
+}
+
+.nav-links a:hover {
+  text-decoration: underline;
+}
+
+/* Forms */
+.buttons {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.buttons h3 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #2c3e50;
+}
+
+.buttons div {
+  margin-bottom: 15px;
+}
+
+.buttons label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.buttons input[type="text"],
+.buttons input[type="password"],
+.buttons input[type="email"] {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.join {
+  display: flex;
+  gap: 10px;
+}
+
+.join input {
+  flex: 1;
+}
+
+.create-btn {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.create-btn:hover {
+  background-color: #2980b9;
+}
+
+.direct-chat-link {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.direct-chat-link a {
+  display: inline-block;
+  width: auto;
+  text-decoration: none;
+}
+
+/* Users list */
+.users-container {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.users-container h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #2c3e50;
+}
+
+.users-list {
+  margin-bottom: 20px;
+}
+
+.user-item {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.user-item:last-child {
+  border-bottom: none;
+}
+
+.user-item a {
+  color: #3498db;
+  text-decoration: none;
+}
+
+.user-item a:hover {
+  text-decoration: underline;
+}
+
+.unread-badge {
+  background-color: #e74c3c;
+  color: white;
+  border-radius: 50%;
+  padding: 3px 8px;
+  font-size: 0.8rem;
+}
+
+.back-button {
+  text-align: center;
+}
+
+.back-button a {
+  color: #3498db;
+  text-decoration: none;
+}
+
+/* Chat message box */
+.message-box {
+  width: 90%;
+  max-width: 800px;
+  margin: 20px auto;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  background-color: white;
+}
+
+.message-box h2 {
+  background-color: #2c3e50;
+  color: white;
+  margin: 0;
+  padding: 15px;
+  text-align: center;
+}
+
+.messages {
+  height: 400px;
+  overflow-y: auto;
+  padding: 15px;
+  background-color: #f9f9f9;
+}
+
+.inputs {
+  display: flex;
+  padding: 10px;
+  background-color: #fff;
+  border-top: 1px solid #eee;
+}
+
+.inputs input[type="text"] {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-right: 8px;
+}
+
+.inputs button {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.inputs button:hover {
+  background-color: #2980b9;
+}
+
+/* Message styling */
+.text {
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  max-width: 80%;
+  word-wrap: break-word;
+}
+
+.text.sent {
+  background-color: #e3f2fd;
+  margin-left: auto;
+}
+
+.text.received {
+  background-color: #f1f1f1;
+}
+
+.system-message {
+  background-color: #fff3cd;
+  color: #856404;
+  margin: 10px auto;
+  text-align: center;
+  max-width: 90%;
+}
+
+.muted {
+  font-size: 0.8em;
+  color: #888;
+  display: block;
+  margin-top: 4px;
+}
+
+/* File handling styles */
+.file-icon {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+.file-link {
+  color: #0066cc;
+  text-decoration: none;
+  border-bottom: 1px dotted #0066cc;
+}
+
+.file-link:hover {
+  text-decoration: none;
+  border-bottom: 1px solid #0066cc;
+}
+
+#file-btn {
+  background-color: #f0f0f0;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 5px 10px;
+  margin-left: 5px;
+  color: #333;
+}
+
+#file-btn:hover {
+  background-color: #e0e0e0;
+}
+
+#upload-progress {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+/* Add custom styling for file type icons */
+.file-icon.document {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM8 11h8v2H8v-2zm0 4h8v2H8v-2z"/></svg>');
+}
+
+.file-icon.image {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4h18zM19 3a2 2 0 0 1 2 2v8h-2V5H5v8H3V5a2 2 0 0 1 2-2h14z"/></svg>');
+}
+
+.file-icon.archive {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M20 3H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-2 14h-2v-2h2v2zm-4 0h-2v-2h2v2zm-4 0H8v-2h2v2zm-4 0H4v-2h2v2z"/></svg>');
+}
+
+.file-icon.other {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/></svg>');
+}
+
+/* Emoji picker styling */
+#emoji-btn {
+  background-color: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 5px 10px;
+  transition: transform 0.2s;
+}
+
+#emoji-btn:hover {
+  transform: scale(1.2);
+}
+
+emoji-picker {
+  --background: white;
+  --border-color: #ddd;
+  width: 300px;
+  height: 350px;
+  box-shadow: 0 5px 10px rgba(0,0,0,0.12);
+  z-index: 1000;
+}
+
+/* Formatting toolbar styling */
+.format-toolbar {
+  display: flex;
+  gap: 5px;
+  padding: 5px 10px;
+  background-color: #f9f9f9;
+  border-bottom: 1px solid #eee;
+}
+
+.format-btn {
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.format-btn:hover {
+  background-color: #f0f0f0;
+}
+
+/* Make links in messages more visible */
+.text a {
+  color: #3498db;
+  text-decoration: none;
+}
+
+.text a:hover {
+  text-decoration: underline;
+}
+
+/* Error messages */
+ul {
+  color: #e74c3c;
+  margin-top: 15px;
+  padding-left: 20px;
+}

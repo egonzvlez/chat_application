@@ -1,0 +1,24 @@
+{% extends 'base.html' %} {% block content %}
+<div class="users-container">
+  <h2>Chat with Users</h2>
+  
+  <div class="users-list">
+    {% if users %}
+      {% for user in users %}
+        <div class="user-item">
+          <a href="{{ url_for('direct_chat', user_id=user.id) }}">{{ user.username }}</a>
+          {% if unread_counts.get(user.id, 0) > 0 %}
+            <span class="unread-badge">{{ unread_counts.get(user.id) }}</span>
+          {% endif %}
+        </div>
+      {% endfor %}
+    {% else %}
+      <p>No other users found.</p>
+    {% endif %}
+  </div>
+  
+  <div class="back-button">
+    <a href="{{ url_for('home') }}">Back to Home</a>
+  </div>
+</div>
+{% endblock %}

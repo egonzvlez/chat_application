@@ -1,15 +1,20 @@
 {% extends 'base.html' %} {% block content %}
 <div class="message-box">
-  <h2>Chat Room: {{code}}</h2>
+  <h2>Chat with: {{other_user.username}}</h2>
   <div class="messages" id="messages">
     {% if messages %}
       {% for msg in messages %}
-      <div class="text">
+      <div class="text {% if msg.sender_id == session.user_id %}sent{% else %}received{% endif %}">
         <span>
-          <strong>{{ msg.name }}</strong>: {{ msg.message }}
+          <strong>{{ msg.sender.username if msg.sender_id != session.user_id else 'You' }}</strong>: 
+          {% if msg.is_file %}
+            Shared a file: <a href="/download_file/{{ msg.file_id }}" target="_blank">{{ msg.content.replace('Shared a file: ', '') }}</a>
+          {% else %}
+            {{ msg.content }}
+          {% endif %}
         </span>
         <span class="muted">
-          {{ msg.timestamp }}
+          {{ msg.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
         </span>
       </div>
       {% endfor %}
@@ -22,20 +27,14 @@
     <button type="button" class="format-btn" title="Link" onclick="insertLink()">🔗</button>
   </div>
   <div class="inputs">
-    <input
-      type="text"
-      rows="3"
-      placeholder="Message"
-      name="message"
-      id="message"
-    />
-    <button type="button" name="send" id="send-btn" onClick="sendMessage()">
+    <input type="text" placeholder="Message" name="message" id="message" />
+    <input type="file" id="file-upload" style="display: none;" />
+    <button type="button" id="file-btn" onclick="document.getElementById('file-upload').click()">
+      File
+    </button>
+    <button type="button" name="send" id="send-btn" onClick="sendDirectMessage()">
       Send
     </button>
-    <button type="button" id="file-btn" onclick="document.getElementById('file-input').click()">
-      📎
-    </button>
-    <input type="file" id="file-input" style="display: none;" />
   </div>
   <div id="upload-progress" style="display: none; width: 100%; padding: 5px;">
     <div style="width: 100%; background-color: #f0f0f0; border-radius: 5px; overflow: hidden;">
@@ -48,31 +47,28 @@
 <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
 
 <script type="module">
-  // All your emoji picker initialization code goes here
   document.addEventListener('DOMContentLoaded', function() {
-    // Create emoji button
+    // Creates emoji button
     const emojiButton = document.createElement('button');
     emojiButton.type = 'button';
     emojiButton.id = 'emoji-btn';
     emojiButton.innerHTML = '😊';
     emojiButton.title = 'Insert emoji';
     
-    // Create emoji picker element
+    // Creates emoji picker element
     const picker = document.createElement('emoji-picker');
     picker.style.display = 'none';
     picker.style.position = 'absolute';
     picker.style.bottom = '60px';
     picker.style.right = '10px';
     picker.style.zIndex = '999';
-    
-    // Rest of your emoji code...
   });
 </script>
 
 <script type="text/javascript">
-// Initialize Socket.IO with reconnection settings
+// Socket.IO with reconnection settings
 var socketio = io({
-  reconnection: true,        // allows reconnection
+  reconnection: true,        // Allows reconnection
   reconnectionAttempts: 10, 
   reconnectionDelay: 1000,   
   reconnectionDelayMax: 5000,
@@ -80,28 +76,25 @@ var socketio = io({
   autoConnect: true          
 });
 
-// Store session info
-const roomCode = "{{code}}";
-const userName = "{{username}}";
+// Stores session info by passing flask server side session to client side js
+var userName = "{{ session.username }}";
+var recipientId = "{{ other_user.id }}";
+var currentUserId = "{{ session.user_id }}";
 
-// Track connection status
-let isConnected = false;
+// Tracks connection status
+var isConnected = false;
 
 socketio.on('connect', function() {
   addSystemMessage('Connected to chat server');
   isConnected = true;
   
-  // If this is a reconnection after server restart, rejoin the room
-  if (roomCode) {
-    console.log("Attempting to rejoin room:", roomCode);
-    socketio.emit("rejoin_room", { 
-      room: roomCode, 
-      name: userName 
-    });
-  }
+  // Joins direct chat room
+  socketio.emit("join_direct_chat", {
+    recipient_id: parseInt(recipientId)
+  });
   
-  // Remove disconnection message if present
-  const disconnectMsg = document.getElementById('disconnect-message');
+  // Removes disconnection message if present
+  var disconnectMsg = document.getElementById('disconnect-message');
   if (disconnectMsg) {
     disconnectMsg.remove();
   }
@@ -112,8 +105,8 @@ socketio.on('disconnect', function() {
   
   // Create a disconnection message if it doesn't exist
   if (!document.getElementById('disconnect-message')) {
-    const messages = document.getElementById("messages");
-    const disconnectDiv = document.createElement('div');
+    var messages = document.getElementById("messages");
+    var disconnectDiv = document.createElement('div');
     disconnectDiv.id = 'disconnect-message';
     disconnectDiv.className = 'system-message';
     disconnectDiv.innerHTML = 'Connection lost. Attempting to reconnect...';
@@ -124,25 +117,21 @@ socketio.on('disconnect', function() {
 socketio.on('reconnect', function() {
   addSystemMessage('Reconnected to server');
   
-  // Rejoin the room after reconnection
-  if (roomCode) {
-    console.log("Rejoining room after reconnection:", roomCode);
-    socketio.emit("rejoin_room", { 
-      room: roomCode, 
-      name: userName 
-    });
-  }
+  // Rejoin the direct chat
+  socketio.emit("join_direct_chat", {
+    recipient_id: parseInt(recipientId)
+  });
 });
 
 socketio.on('reconnecting', function(attemptNumber) {
-  const disconnectMsg = document.getElementById('disconnect-message');
+  var disconnectMsg = document.getElementById('disconnect-message');
   if (disconnectMsg) {
-    disconnectMsg.innerHTML = `Connection lost. Reconnection attempt ${attemptNumber}/10...`;
+    disconnectMsg.innerHTML = 'Connection lost. Reconnection attempt ' + attemptNumber + '/10...';
   }
 });
 
 socketio.on('reconnect_failed', function() {
-  const disconnectMsg = document.getElementById('disconnect-message');
+  var disconnectMsg = document.getElementById('disconnect-message');
   if (disconnectMsg) {
     disconnectMsg.innerHTML = 'Failed to reconnect to the server. Please refresh the page.';
   }
@@ -173,14 +162,21 @@ function formatText(text) {
   return text;
 }
 
-// Function to send a message when the send button is clicked
-function sendMessage() {
-  const message = document.getElementById("message");
+// Func to send a direct message
+function sendDirectMessage() {
+  var message = document.getElementById("message");
   if (message.value.trim() === "") return;
   
   // Only send if connected
   if (isConnected) {
-    socketio.emit("message", {data: message.value.trim()});
+    socketio.emit("direct_message", {
+      recipient_id: parseInt(recipientId),
+      content: message.value.trim()
+    });
+    
+    // Add message to the UI immediately
+    createMessage("You", message.value.trim(), false, null, true);
+    
     message.value = "";
   } else {
     addSystemMessage("Cannot send message: not connected to server");
@@ -188,76 +184,83 @@ function sendMessage() {
 }
 
 // Function to create and display a message
-function createMessage(name, message, isFile = false, fileId = null) {
-  const messages = document.getElementById("messages");
-  let messageContent = message;
+function createMessage(name, message, isFile, fileId, isSent) {
+  if (isFile === undefined) isFile = false;
+  if (fileId === undefined) fileId = null;
+  if (isSent === undefined) isSent = false;
+  
+  var messages = document.getElementById("messages");
+  var messageContent = message;
   
   // If it's a file message, make the filename clickable
   if (isFile && fileId) {
-    const fileName = message.replace("Shared a file: ", "");
-    messageContent = `Shared a file: <a href="/download_file/${fileId}" target="_blank">${fileName}</a>`;
+    var fileName = message.replace("Shared a file: ", "");
+    messageContent = 'Shared a file: <a href="/download_file/' + fileId + '" target="_blank">' + fileName + '</a>';
   } else {
     // Apply text formatting to regular messages
     messageContent = formatText(messageContent);
   }
   
-  const content = `
-  <div class="text">
-      <span>
-          <strong>${name}</strong>: ${messageContent}
-      </span>
-      <span class="muted">
-          ${new Date().toLocaleString()}
-      </span>
-  </div>
-  `;
+  var content = '\
+  <div class="text ' + (isSent ? 'sent' : 'received') + '">\
+      <span>\
+          <strong>' + name + '</strong>: ' + messageContent + '\
+      </span>\
+      <span class="muted">\
+          ' + new Date().toLocaleString() + '\
+      </span>\
+  </div>';
+  
   messages.innerHTML += content;
   // Auto-scroll to the bottom
   messages.scrollTop = messages.scrollHeight;
 }
 
-// Listen for messages from the server
-socketio.on("message", function(data) {
-  createMessage(data.name, data.message, data.is_file, data.file_id);
+// Listens for direct messages from the server
+socketio.on("direct_message", function(data) {
+  // Don't display messages that we sent
+  if (data.sender_id != parseInt(currentUserId)) {
+    createMessage(data.sender_name, data.content, data.is_file, data.file_id);
+  }
 });
 
 // Handle file upload
-document.getElementById("file-input").addEventListener("change", function(event) {
-  const file = event.target.files[0];
+document.getElementById("file-upload").addEventListener("change", function(event) {
+  var file = event.target.files[0];
   if (!file) return;
   
-  // Create FormData object to send file
-  const formData = new FormData();
+  // Create formdaata object to send file to
+  var formData = new FormData();
   formData.append("file", file);
-  formData.append("room_code", roomCode);
+  formData.append("recipient_id", recipientId);
   
   // Show progress bar
-  const uploadProgress = document.getElementById("upload-progress");
-  const progressBar = document.getElementById("progress-bar");
-  const progressStatus = document.getElementById("progress-status");
+  var uploadProgress = document.getElementById("upload-progress");
+  var progressBar = document.getElementById("progress-bar");
+  var progressStatus = document.getElementById("progress-status");
   
   uploadProgress.style.display = "block";
   progressBar.style.width = "0%";
   progressStatus.innerText = "Uploading file...";
   
-  // Create and configure AJAX request
-  const xhr = new XMLHttpRequest();
+  // Create and configure AJAX request.... not sure about this yet
+  var xhr = new XMLHttpRequest();
   
   xhr.upload.addEventListener("progress", function(e) {
     if (e.lengthComputable) {
-      const percentComplete = (e.loaded / e.total) * 100;
+      var percentComplete = (e.loaded / e.total) * 100;
       progressBar.style.width = percentComplete + "%";
-      progressStatus.innerText = `Uploading: ${Math.round(percentComplete)}%`;
+      progressStatus.innerText = "Uploading: " + Math.round(percentComplete) + "%";
     }
   });
   
   xhr.addEventListener("load", function() {
     if (xhr.status === 200) {
-      const response = JSON.parse(xhr.responseText);
+      var response = JSON.parse(xhr.responseText);
       progressStatus.innerText = "Upload complete!";
       
-      // Clear the file input for future uploads
-      document.getElementById("file-input").value = "";
+      // Clears the file input for future uploads
+      document.getElementById("file-upload").value = "";
       
       // Hide progress bar after 3 seconds
       setTimeout(function() {
@@ -276,43 +279,36 @@ document.getElementById("file-input").addEventListener("change", function(event)
   xhr.send(formData);
 });
 
-// Event listener for Enter key press
-document.getElementById("message").addEventListener("keypress", function(event) {
-  if (event.key === "Enter") {
-    sendMessage();
-  }
-});
-
 // Helper function to insert formatting tags
 function insertFormatting(openTag, closeTag) {
-  const messageInput = document.getElementById('message');
-  const startPos = messageInput.selectionStart;
-  const endPos = messageInput.selectionEnd;
-  const selectedText = messageInput.value.substring(startPos, endPos);
+  var messageInput = document.getElementById('message');
+  var startPos = messageInput.selectionStart;
+  var endPos = messageInput.selectionEnd;
+  var selectedText = messageInput.value.substring(startPos, endPos);
   
   // Insert the formatting tags around the selected text
-  const newText = messageInput.value.substring(0, startPos) + 
-                 openTag + selectedText + closeTag + 
-                 messageInput.value.substring(endPos);
+  var newText = messageInput.value.substring(0, startPos) + 
+                openTag + selectedText + closeTag + 
+                messageInput.value.substring(endPos);
   
   messageInput.value = newText;
   
   // Set cursor position after the inserted text
-  const newCursorPos = endPos + openTag.length + closeTag.length;
+  var newCursorPos = endPos + openTag.length + closeTag.length;
   messageInput.setSelectionRange(newCursorPos, newCursorPos);
   messageInput.focus();
 }
 
 // Function to insert a link
 function insertLink() {
-  const messageInput = document.getElementById('message');
-  const startPos = messageInput.selectionStart;
-  const endPos = messageInput.selectionEnd;
-  const selectedText = messageInput.value.substring(startPos, endPos);
+  var messageInput = document.getElementById('message');
+  var startPos = messageInput.selectionStart;
+  var endPos = messageInput.selectionEnd;
+  var selectedText = messageInput.value.substring(startPos, endPos);
   
   // If text is selected, use it as the link text
-  let linkText = selectedText || 'link text';
-  let url = 'https://';
+  var linkText = selectedText || 'link text';
+  var url = 'https://';
   
   // Check if the selected text is a URL
   if (selectedText && selectedText.match(/^https?:\/\//)) {
@@ -321,48 +317,55 @@ function insertLink() {
   }
   
   // Insert the link format
-  const linkFormat = `[${linkText}](${url})`;
+  var linkFormat = '[' + linkText + '](' + url + ')';
   
   messageInput.value = messageInput.value.substring(0, startPos) + 
                        linkFormat + 
                        messageInput.value.substring(endPos);
   
   // Set selection to the link text for easy editing
-  const newStartPos = startPos + 1; // Position after [
-  const newEndPos = newStartPos + linkText.length;
+  var newStartPos = startPos + 1; // Position after [
+  var newEndPos = newStartPos + linkText.length;
   
   messageInput.setSelectionRange(newStartPos, newEndPos);
   messageInput.focus();
 }
 
-// Display message for debugging
+// Event listener for Enter key press
+document.getElementById("message").addEventListener("keypress", function(event) {
+  if (event.key === "Enter") {
+    sendDirectMessage();
+  }
+});
+
+// Display message for debugging...remove later
 function addSystemMessage(message) {
-  const messages = document.getElementById("messages");
-  const content = `
-  <div class="text system-message">
-      <span>
-          <strong>System</strong>: ${message}
-      </span>
-      <span class="muted">
-          ${new Date().toLocaleString()}
-      </span>
-  </div>
-  `;
+  var messages = document.getElementById("messages");
+  var content = '\
+  <div class="text system-message">\
+      <span>\
+          <strong>System</strong>: ' + message + '\
+      </span>\
+      <span class="muted">\
+          ' + new Date().toLocaleString() + '\
+      </span>\
+  </div>';
+  
   messages.innerHTML += content;
   // Auto-scroll to the bottom
   messages.scrollTop = messages.scrollHeight;
 }
 
-// Emoji picker initialization
+// Emoji picker init...remove maybe
 document.addEventListener('DOMContentLoaded', function() {
-  // Create emoji button
+  // Creates emoji button
   const emojiButton = document.createElement('button');
   emojiButton.type = 'button';
   emojiButton.id = 'emoji-btn';
   emojiButton.innerHTML = '😊';
   emojiButton.title = 'Insert emoji';
   
-  // Create emoji picker element
+  // Creates emoji picker element
   const picker = document.createElement('emoji-picker');
   picker.style.display = 'none';
   picker.style.position = 'absolute';
@@ -370,7 +373,7 @@ document.addEventListener('DOMContentLoaded', function() {
   picker.style.right = '10px';
   picker.style.zIndex = '999';
   
-  // Add them to the page
+  // Adds them to the page
   const inputs = document.querySelector('.inputs');
   inputs.insertBefore(emojiButton, document.getElementById('file-btn'));
   document.querySelector('.message-box').appendChild(picker);
@@ -380,26 +383,26 @@ document.addEventListener('DOMContentLoaded', function() {
     picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
   });
   
-  // Hide picker when clicking elsewhere
+  // Hide picker when clicking somewhere else
   document.addEventListener('click', function(e) {
     if (e.target !== emojiButton && e.target !== picker && !picker.contains(e.target)) {
       picker.style.display = 'none';
     }
   });
   
-  // Insert selected emoji into message input
+  // Inserts selected emoji into message box
   picker.addEventListener('emoji-click', function(event) {
     const messageInput = document.getElementById('message');
     const emoji = event.detail.unicode;
     const cursorPos = messageInput.selectionStart;
     
-    // Insert emoji at cursor position
+    // Insert emoji 
     messageInput.value = 
       messageInput.value.substring(0, cursorPos) + 
       emoji + 
       messageInput.value.substring(cursorPos);
     
-    // Set cursor position after the inserted emoji
+    // Sets cursor position after emoji selected
     messageInput.selectionStart = cursorPos + emoji.length;
     messageInput.selectionEnd = cursorPos + emoji.length;
     messageInput.focus();
@@ -408,7 +411,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Auto-scroll to the bottom when the page loads
 window.onload = function() {
-  const messages = document.getElementById("messages");
+  var messages = document.getElementById("messages");
   messages.scrollTop = messages.scrollHeight;
 };
 </script>

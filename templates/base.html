@@ -3,17 +3,24 @@
   <head>
     <meta charset="UTF-8" />
     <title>Chat App</title>
-    <link
-      rel="stylesheet"
-      href="{{url_for('static', filename='css/style.css')}}"
-    />
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"
-      integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
-      crossorigin="anonymous"
-    ></script>
+    <link rel="stylesheet" href="{{url_for('static', filename='css/style.css')}}" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
   </head>
   <body>
+    {% if session.get('user_id') %}
+    <div class="header">
+      <div class="user-info">
+        {% if session.username %}
+          <div class="nav-links">
+            <a href="{{ url_for('home') }}">Home</a>
+            <a href="{{ url_for('users') }}">Users</a>
+            Logged in as: {{ session.username }} | <a href="{{ url_for('logout') }}">Logout</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
     <div class="content">{% block content %} {% endblock %}</div>
   </body>
 </html>
