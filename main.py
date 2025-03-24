@@ -23,7 +23,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # File upload settings
 app.config["UPLOAD_FOLDER"] = "uploaded_files"
-app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16 MB max file size
+app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16 MB 
 app.config["ALLOWED_EXTENSIONS"] = {"txt", "pdf", "png", "jpg", "jpeg", "gif", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "zip"}
 
 # Create upload folder if it doesn't exist
@@ -35,25 +35,25 @@ socketio = SocketIO(
     ping_interval=10
 )
 
-# rate limiting 
+# Rate limiting 
 RATE_LIMIT = {
     "MAX_MESSAGES": 5,      # max messages in a window
-    "TIME_WINDOW": 10,      # time window in seconds
-    "COOLDOWN": 15          # cooldown period after 
+    "TIME_WINDOW": 10,  
+    "COOLDOWN": 15         
 }
 
-# initialize db
+# Initialize db
 db.init_app(app)
 migrate = Migrate(app,db)
 
 with app.app_context():
     db.create_all()
 
-# keeps track of message per user
+# Keeps track of message per user
 message_history = defaultdict(list)
 user_cooldowns = {}
 
-# Initialize the chat logger after the app configuration
+# Initialize the chat logger after the app config
 chat_logger = ChatLogger()
 
 # Dictionary to keep track of active session log files
@@ -61,7 +61,7 @@ active_log_sessions = {}
 
 
 def generate_code(length):
-    # generates room code at size 'length' and makes sure that code doesn't exist already
+    # Generates room code at size 'length' and makes sure that code doesn't exist already
     while True:
         code = ""
         for _ in range(length):
@@ -74,11 +74,10 @@ def generate_code(length):
     return code
 
 def cleanup_inactive_log_sessions():
-    """Close and remove inactive log sessions."""
     inactive_sessions = []
     
     for session_key, log_path in active_log_sessions.items():
-        # Check if the session is for a room
+        # Checks if the session is for a room
         if session_key.startswith("room_"):
             room_code = session_key[5:]  # Remove "room_" prefix
             room = Room.query.filter_by(code=room_code).first()
@@ -88,33 +87,32 @@ def cleanup_inactive_log_sessions():
                 chat_logger.end_session(log_path)
                 inactive_sessions.append(session_key)
     
-    # Remove inactive sessions
+    # Removes inactive sessions
     for session_key in inactive_sessions:
         active_log_sessions.pop(session_key, None)
 
-# Add this near the top of your file with other initializations
 user_last_active = {}
 
 def update_active_timestamp(session_key):
     """Update the timestamp for when a session was last active."""
-    user_last_active[session_key] = datetime.utcnow()
+    user_last_active[session_key] = datetime.now(datetime.timezone.utc)()
 
 
 @app.route("/", methods=["POST", "GET"])
 def home():
-    # check if user is logged in
+    # Check if user is logged in
     if not session.get("user_id"):
         return redirect(url_for("login"))
     
-    # get username from session
+    # Get username from session
     username = session.get("username")
     if not username:
         session.clear()
         return redirect(url_for("login"))
             
-    # handle room creation/joining
+    # Handle room creation/joining
     if request.method == "POST":
-        # ***debug - print form data to see what's being submitted
+        # ***debug*** - print form data to see what's being submitted
         print("Form data:", request.form)
         
         create_btn = "create" in request.form
@@ -139,7 +137,7 @@ def home():
                 print(f"Error creating room: {e}")
                 return render_template("home.html", error="Failed to create room: " + str(e), name=username)
         
-        # joins an existing room
+        # Joins an existing room
         elif "join" in request.form:
             if not code:
                 return render_template("home.html", error="Please enter a room code.", code=code, name=username)
@@ -149,12 +147,12 @@ def home():
             if not existing_room:
                 return render_template("home.html", error="Room does not exist.", code=code, name=username)
             
-            # stores room info in session
+            # Stores room info in session
             session["room"] = code
             session["name"] = username
             return redirect(url_for("room"))
 
-    # displays home page for GET request
+    # Displays home page for GET request
     return render_template("home.html", name=username)
 
 @app.route("/register", methods=["GET", "POST"])
@@ -164,7 +162,7 @@ def register():
         email = request.form.get("email")
         password = request.form.get("password")
         
-        # check if username or email already exists
+        # Check if username or email already exists
         existing_user = User.query.filter_by(username=username).first()
         if existing_user:
             return render_template("register.html", error="Username already exists")
@@ -173,7 +171,7 @@ def register():
         if existing_email:
             return render_template("register.html", error="Email already in use")
         
-        # create new user
+        # Create new user
         new_user = User(username=username, email=email)
         new_user.set_password(password)
         
@@ -192,9 +190,9 @@ def login():
         
         user = User.query.filter_by(username=username).first()
         
-        # brute-force protection
+        # Brute-force protection
         if user and user.is_locked:
-            # check if lock should be removed
+            # Check if lock should be removed
             if user.last_failed_login and (datetime.utcnow() - user.last_failed_login).total_seconds() > 1800:
                 user.is_locked = False
                 user.failed_login_attempts = 0
@@ -203,23 +201,23 @@ def login():
                 return render_template("login.html", error="Account is locked. Try again later")
         
         if user and user.check_password(password):
-            # reset failed attempts
+            # Reset failed attempts
             user.failed_login_attempts = 0
             user.is_locked = False
             db.session.commit()
             
-            # set up session
+            # Sets up session
             session["user_id"] = user.id
             session["username"] = user.username
             
             return redirect(url_for("home"))
         else:
-            # increment failed login attempts
+            # Increments failed login attempts
             if user:
                 user.failed_login_attempts += 1
                 user.last_failed_login = datetime.utcnow()
                 
-                # locks account after 5 failed attempts
+                # Locks account after 5 failed attempts
                 if user.failed_login_attempts >= 5:
                     user.is_locked = True
                 
@@ -237,11 +235,11 @@ def logout():
 
 @app.route("/room")
 def room():
-    # check if user is logged in
+    # Check if user is logged in
     if not session.get("user_id"):
         return redirect(url_for("login"))
     
-    # validate room session data
+    # Validate room session data
     room_code = session.get("room")
     
     if room_code is None:
@@ -255,7 +253,7 @@ def room():
             session.pop("room")
         return redirect(url_for("home"))
     
-    # render room template
+    # Renders room template
     return render_template("room.html", code=room_code, messages=room_obj.messages_list, 
                       username=session.get("username"))
 
@@ -285,7 +283,7 @@ def users():
         
         return render_template("users.html", users=users_list, unread_counts=unread_counts)
     except Exception as e:
-        # Log the error
+        # ***Logs the error***
         print(f"Error in users route: {e}")
         return render_template("home.html", error="An error occurred when trying to view users. Please try again.")
 
@@ -327,8 +325,8 @@ def upload_file():
         return jsonify({"error": "No file part"}), 400
     
     file = request.files['file']
-    
-    # If user does not select file, browser also submits an empty part without filename
+
+    # If user does not select a file, browser also submits an empty part without filename
     if file.filename == '':
         return jsonify({"error": "No file selected"}), 400
     
@@ -442,7 +440,7 @@ def upload_file():
             "message_id": file_message.id
         }
         
-        # Emit socket event based on message type
+        # Emit socket event depending on message type
         if room_code:
             socketio.emit("message", {
                 "name": session.get("username"),
@@ -481,12 +479,12 @@ def download_file(file_id):
     
     # Check if user has access to the file
     if shared_file.is_direct_message:
-        # For direct messages, check if user is sender or recipient
+        # Check if user is sender or recipient
         direct_message = shared_file.direct_message
         if direct_message and (direct_message.sender_id != session.get("user_id") and direct_message.recipient_id != session.get("user_id")):
             return "Unauthorized", 403
     else:
-        # For room messages, checks if user is in the room
+        # checks if user is in the room.. work on this later
             return "Unauthorized", 403
     
     try:
@@ -532,12 +530,12 @@ def message(data):
     if not room:
         return
     
-    # checks if user is in cooldown
+    # Checks if user is in cooldown
     current_time = time()
     if user_id in user_cooldowns and current_time < user_cooldowns[user_id]:
-        # calculate remaining cooldown time
+        # Calculate remaining cooldown time
         remaining = int(user_cooldowns[user_id] - current_time)
-        # send private message to the user about rate limiting
+        # Sends message to the user about rate limiting
         send({
             "name": "System",
             "message": f"Rate limit exceeded. Please wait {remaining} seconds before sending more messages."
@@ -550,15 +548,15 @@ def message(data):
         
         return
     
-    # cleans up old messages from history
+    # Cleans up old messages from history
     message_history[user_id] = [msg_time for msg_time in message_history[user_id] 
                                if current_time - msg_time < RATE_LIMIT["TIME_WINDOW"]]
     
-    # check if user has exceeded rate limit
+    # Check if user has exceeded rate limit
     if len(message_history[user_id]) >= RATE_LIMIT["MAX_MESSAGES"]:
-        # apply cooldown
+        # Apply cooldown
         user_cooldowns[user_id] = current_time + RATE_LIMIT["COOLDOWN"]
-        # let user know about rate limiting
+        # Let users know about rate limiting
         send({
             "name": "System",
             "message": f"Rate limit exceeded. Please wait {RATE_LIMIT['COOLDOWN']} seconds before sending more messages."
@@ -571,7 +569,7 @@ def message(data):
         
         return
     
-    # record this message timestamp
+    # Record this message timestamp
     message_history[user_id].append(current_time)
     
     # Create new message in the database
@@ -617,7 +615,7 @@ def handle_direct_message(data):
     current_time = time()
     if sender_id in user_cooldowns and current_time < user_cooldowns[sender_id]:
         remaining = int(user_cooldowns[sender_id] - current_time)
-        # Send private message about rate limiting
+        # Send message about rate limiting
         socketio.emit("direct_message", {
             "sender_name": "System",
             "sender_id": 0,
@@ -655,7 +653,7 @@ def handle_direct_message(data):
         
         return
     
-    # Record this message timestamp
+    # Record message timestamp
     message_history[sender_id].append(current_time)
     
     # Save message to database
@@ -724,11 +722,11 @@ def connect():
     name = session.get("name")
     user_id = session.get("user_id")
     
-    # Enhanced validation
+    # Validataion 
     if not room_code or not name or not user_id:
         return
     
-    # Get room from database
+    # Gets room from database
     room = Room.query.filter_by(code=room_code).first()
     if not room:
         return
@@ -768,7 +766,7 @@ def disconnect():
             # Send disconnection message
             send({"name": name, "message": "has left the room"}, to=room_code)
             
-            # Log the user leave event
+            # Log the users leave event
             log_path = active_log_sessions.get(f"room_{room_code}")
             if log_path:
                 chat_logger.log_system_message(log_path, f"{name} has left the room")
@@ -782,17 +780,17 @@ def disconnect():
 
 @socketio.on('reconnect')
 def handle_reconnect():
-    # triggered when a client reconnects after a disconnection
+    # ***triggered when a client reconnects after a disconnection***
     room_code = session.get("room")
     name = session.get("name")
     
     if room_code and name:
-        # Get room from database
+        # Gets room from database
         room = Room.query.filter_by(code=room_code).first()
         if room:
             join_room(room_code)
             
-            # Get recent messages from the database
+            # Gets recent messages from the database
             recent_messages = [
                 {
                     "name": msg.sender_name,
@@ -822,12 +820,12 @@ def handle_rejoin(data):
         db.session.add(room)
         db.session.commit()
     
-    # Join the room
+    # Joins the room
     join_room(room_code)
     room.members_count += 1
     db.session.commit()
     
-    # Let everyone know the user has rejoined
+    # Announce to everyone the user has rejoined
     send({"name": name, "message": "has rejoined the room after a disconnection"}, to=room_code)
     print(f"{name} rejoined room {room_code} after reconnection")
 
@@ -847,12 +845,11 @@ def get_file_icon_class(file_type):
     else:
         return "other"
 
-# Make the helper function available in templates
 @app.context_processor
 def utility_processor():
     return dict(get_file_icon_class=get_file_icon_class)
 
-# Cleanup function for temporary files
+# Cleanup for temporary files
 def cleanup_temp_files():
     temp_dir = app.config["UPLOAD_FOLDER"]
     current_time = time()
@@ -869,4 +866,4 @@ if __name__ == "__main__":
     cleanup_temp_files()
     cleanup_inactive_log_sessions()
     
-    socketio.run(app, debug=True, host='0.0.0.0', port=5000, ssl_context='adhoc')
+    socketio.run(app, debug=True, host='0.0.0.0', port=5000 , ssl_context='adhoc')
