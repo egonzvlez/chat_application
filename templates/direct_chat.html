@@ -197,7 +197,7 @@ function createMessage(name, message, isFile, fileId, isSent) {
     var fileName = message.replace("Shared a file: ", "");
     messageContent = 'Shared a file: <a href="/download_file/' + fileId + '" target="_blank">' + fileName + '</a>';
   } else {
-    // Apply text formatting to regular messages
+    // Applies text formatting to regular messages
     messageContent = formatText(messageContent);
   }
   

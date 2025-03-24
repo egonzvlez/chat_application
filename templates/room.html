@@ -48,29 +48,27 @@
 <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
 
 <script type="module">
-  // All your emoji picker initialization code goes here
+  // Emoji picker initialization
   document.addEventListener('DOMContentLoaded', function() {
-    // Create emoji button
+    // Creates emoji button
     const emojiButton = document.createElement('button');
     emojiButton.type = 'button';
     emojiButton.id = 'emoji-btn';
     emojiButton.innerHTML = '😊';
     emojiButton.title = 'Insert emoji';
     
-    // Create emoji picker element
+    // Creates emoji picker element
     const picker = document.createElement('emoji-picker');
     picker.style.display = 'none';
     picker.style.position = 'absolute';
     picker.style.bottom = '60px';
     picker.style.right = '10px';
     picker.style.zIndex = '999';
-    
-    // Rest of your emoji code...
   });
 </script>
 
 <script type="text/javascript">
-// Initialize Socket.IO with reconnection settings
+// Initialize Socket.IO w/ reconnection settings
 var socketio = io({
   reconnection: true,        // allows reconnection
   reconnectionAttempts: 10, 
@@ -84,7 +82,7 @@ var socketio = io({
 const roomCode = "{{code}}";
 const userName = "{{username}}";
 
-// Track connection status
+// Tracks connection status
 let isConnected = false;
 
 socketio.on('connect', function() {
@@ -192,12 +190,11 @@ function createMessage(name, message, isFile = false, fileId = null) {
   const messages = document.getElementById("messages");
   let messageContent = message;
   
-  // If it's a file message, make the filename clickable
+  // If its a file message, make the file clickable
   if (isFile && fileId) {
     const fileName = message.replace("Shared a file: ", "");
     messageContent = `Shared a file: <a href="/download_file/${fileId}" target="_blank">${fileName}</a>`;
   } else {
-    // Apply text formatting to regular messages
     messageContent = formatText(messageContent);
   }
   
@@ -259,7 +256,7 @@ document.getElementById("file-input").addEventListener("change", function(event)
       // Clear the file input for future uploads
       document.getElementById("file-input").value = "";
       
-      // Hide progress bar after 3 seconds
+
       setTimeout(function() {
         uploadProgress.style.display = "none";
       }, 3000);

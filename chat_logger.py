@@ -3,7 +3,7 @@ from datetime import datetime
 
 class ChatLogger:
     def __init__(self, base_log_dir="chat_logs"):
-        """Initialize the chat logger with a base directory for logs."""
+        """Initializes the chat logger with a base directory for logs."""
         self.base_log_dir = base_log_dir
         self._ensure_log_directory_exists()
         
@@ -28,23 +28,22 @@ class ChatLogger:
         room_dir = os.path.join(self.base_log_dir, "rooms", room_code)
         if not os.path.exists(room_dir):
             os.makedirs(room_dir)
-        
-        # Format: YYYY-MM-DD_HH-MM-SS.txt
+        # Format
         timestamp = datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S")
         return os.path.join(room_dir, f"{timestamp}.txt")
     
     def _get_direct_log_path(self, user1_id, user2_id):
         """Get the path to the log file for a direct chat between two users."""
-        # Sort user IDs to ensure consistent directory naming
+        # Sort user IDs
         participants = sorted([user1_id, user2_id])
         direct_chat_id = f"{participants[0]}_{participants[1]}"
         
-        # Create a directory for this specific direct chat if it doesn't exist
+        # Create a directory for direct chat if it doesn't exist
         direct_dir = os.path.join(self.base_log_dir, "direct", direct_chat_id)
         if not os.path.exists(direct_dir):
             os.makedirs(direct_dir)
         
-        # Format: YYYY-MM-DD_HH-MM-SS.txt
+        # Format
         timestamp = datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S")
         return os.path.join(direct_dir, f"{timestamp}.txt")
     
@@ -112,7 +111,7 @@ class ChatLogger:
             return False
     
     def log_system_message(self, log_path, message_content, timestamp=None):
-        """Log a system message (e.g., user joined/left)."""
+        """Log a system message. """
         if not timestamp:
             timestamp = datetime.utcnow()
             

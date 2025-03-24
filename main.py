@@ -95,7 +95,7 @@ user_last_active = {}
 
 def update_active_timestamp(session_key):
     """Update the timestamp for when a session was last active."""
-    user_last_active[session_key] = datetime.now(datetime.timezone.utc)()
+    user_last_active[session_key] = datetime.utcnow()
 
 
 @app.route("/", methods=["POST", "GET"])
@@ -849,7 +849,7 @@ def get_file_icon_class(file_type):
 def utility_processor():
     return dict(get_file_icon_class=get_file_icon_class)
 
-# Cleanup for temporary files
+# Cleanup fun for temporary files
 def cleanup_temp_files():
     temp_dir = app.config["UPLOAD_FOLDER"]
     current_time = time()
@@ -866,4 +866,4 @@ if __name__ == "__main__":
     cleanup_temp_files()
     cleanup_inactive_log_sessions()
     
-    socketio.run(app, debug=True, host='0.0.0.0', port=5000 , ssl_context='adhoc')
+    socketio.run(app, debug=True, host='0.0.0.0', port=5000 , ssl_context=None)
