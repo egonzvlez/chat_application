@@ -1,0 +1,7 @@
+Direct Chat between carlos and user
+Session Started: 2025-03-24 05:27:17 UTC
+--------------------------------------------------------------------------------
+
+[2025-03-24 05:27:17] *SYSTEM*: carlos started a chat with user
+[2025-03-24 05:27:24] carlos: HEY WHATS GOING ON
+[2025-03-24 05:30:20] user: HI'

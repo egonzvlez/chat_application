@@ -484,7 +484,13 @@ def download_file(file_id):
         if direct_message and (direct_message.sender_id != session.get("user_id") and direct_message.recipient_id != session.get("user_id")):
             return "Unauthorized", 403
     else:
-        # checks if user is in the room.. work on this later
+        # For room files, check if the room exists and if the user has the room in their session
+        if shared_file.room_code:
+            # Check if user is in the room by comparing with session room
+            if session.get("room") != shared_file.room_code:
+                return "Unauthorized", 403
+        else:
+            # If the file doesn't have a room code, deny access
             return "Unauthorized", 403
     
     try:
