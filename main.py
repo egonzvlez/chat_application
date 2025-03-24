@@ -872,4 +872,4 @@ if __name__ == "__main__":
     cleanup_temp_files()
     cleanup_inactive_log_sessions()
     
-    socketio.run(app, debug=True, host='0.0.0.0', port=5000 , ssl_context=None)
+    socketio.run(app, debug=True, host='0.0.0.0', port=5000 , ssl_context='adhoc')
