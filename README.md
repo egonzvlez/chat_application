@@ -1,6 +1,6 @@
 # SecureChat - RT Chat Application
 Web security Project 1 Part 2.
-Enrique Gonzalez @egonzalez4467@csu.fullerton.edu
+* Enrique Gonzalez @egonzalez4467@csu.fullerton.edu
 
 ## Requirements
 
